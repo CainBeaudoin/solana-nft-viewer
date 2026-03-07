@@ -5,9 +5,10 @@ import { NFTData } from '../types/nft';
 interface NFTCardProps {
   nft: NFTData;
   rarityScore?: number;
+  onAttributeClick?: (traitType: string, value: string) => void;
 }
 
-export function NFTCard({ nft, rarityScore }: NFTCardProps) {
+export function NFTCard({ nft, rarityScore, onAttributeClick }: NFTCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -21,6 +22,18 @@ export function NFTCard({ nft, rarityScore }: NFTCardProps) {
   };
 
   const rarity = rarityScore !== undefined ? getRarityLabel(rarityScore) : null;
+
+  const truncateAddress = (address: string) => {
+    if (!address) return 'Unknown';
+    return `${address.slice(0, 4)}...${address.slice(-4)}`;
+  };
+
+  const handleAttributeClick = (traitType: string, value: string) => {
+    if (onAttributeClick) {
+      onAttributeClick(traitType, value);
+      setShowDetails(false); // Close modal to show filtered results
+    }
+  };
 
   return (
     <>
@@ -66,6 +79,11 @@ export function NFTCard({ nft, rarityScore }: NFTCardProps) {
         </div>
         <div className="p-3">
           <h3 className="font-medium text-gray-200 truncate text-sm">{nft.name}</h3>
+          {nft.owner && (
+            <p className="text-xs text-gray-500 mt-1 font-mono">
+              Owner: {truncateAddress(nft.owner)}
+            </p>
+          )}
           {rarityScore !== undefined && (
             <p className="text-xs text-gray-500 mt-1">
               Score: {rarityScore.toFixed(1)}
@@ -123,20 +141,60 @@ export function NFTCard({ nft, rarityScore }: NFTCardProps) {
                   )}
                 </div>
 
+                {/* Mint Address */}
                 <div className="mt-4 p-3 bg-dark-card rounded-lg">
                   <p className="text-xs text-gray-500 mb-1">Mint Address</p>
                   <p className="text-xs text-gray-400 font-mono break-all">{nft.mint}</p>
                 </div>
 
+                {/* Owner */}
+                {nft.owner && (
+                  <div className="mt-3 p-3 bg-dark-card rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Owner</p>
+                    <p className="text-xs text-gray-400 font-mono break-all">{nft.owner}</p>
+                  </div>
+                )}
+
+                {/* Metadata URI */}
+                {nft.uri && (
+                  <div className="mt-3 p-3 bg-dark-card rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Metadata URI</p>
+                    <a
+                      href={nft.uri}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-accent-purple hover:underline break-all"
+                    >
+                      {nft.uri}
+                    </a>
+                  </div>
+                )}
+
                 {nft.attributes.length > 0 && (
                   <div className="mt-4">
-                    <h3 className="text-sm font-semibold text-gray-300 mb-3">Attributes</h3>
+                    <h3 className="text-sm font-semibold text-gray-300 mb-3">
+                      Attributes
+                      {onAttributeClick && (
+                        <span className="text-xs font-normal text-gray-500 ml-2">
+                          (click to filter)
+                        </span>
+                      )}
+                    </h3>
                     <div className="grid grid-cols-2 gap-2">
                       {nft.attributes.map((attr, index) => (
-                        <div key={index} className="bg-dark-card border border-dark-border rounded-lg p-3">
+                        <button
+                          key={index}
+                          onClick={() => handleAttributeClick(attr.trait_type, attr.value)}
+                          disabled={!onAttributeClick}
+                          className={`bg-dark-card border border-dark-border rounded-lg p-3 text-left transition-all ${
+                            onAttributeClick
+                              ? 'cursor-pointer hover:border-accent-purple hover:bg-accent-purple/10 active:scale-95'
+                              : 'cursor-default'
+                          }`}
+                        >
                           <p className="text-xs text-gray-500 uppercase tracking-wide">{attr.trait_type}</p>
                           <p className="text-sm font-medium text-gray-200 mt-0.5">{attr.value}</p>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>

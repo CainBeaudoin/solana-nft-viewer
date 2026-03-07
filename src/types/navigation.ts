@@ -1,1 +1,1 @@
-export type ViewType = 'collection' | 'explorer' | 'analytics' | 'rarity' | 'market' | 'settings';
+export type ViewType = 'collection' | 'rarity';

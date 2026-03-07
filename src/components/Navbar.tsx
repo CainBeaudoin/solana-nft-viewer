@@ -1,36 +1,34 @@
-import { motion } from 'framer-motion';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { useRef, useEffect } from 'react';
-import { WalletButton } from './WalletButton';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavbarProps {
-  onSearch?: (query: string) => void;
-  searchQuery?: string;
-  hasResults?: boolean;
+  apiKey: string;
+  onApiKeyChange: (key: string) => void;
+  isApiKeyValid: boolean;
 }
 
-export function Navbar({ onSearch, searchQuery = '', hasResults = false }: NavbarProps) {
-  const { publicKey } = useWallet();
-  const searchInputRef = useRef<HTMLInputElement>(null);
+export function Navbar({ apiKey, onApiKeyChange, isApiKeyValid }: NavbarProps) {
+  const [isExpanded, setIsExpanded] = useState(!apiKey);
+  const [localKey, setLocalKey] = useState(apiKey);
 
+  // Auto-collapse when valid key is entered
   useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
-      if (e.key === 'Escape' && document.activeElement === searchInputRef.current) {
-        searchInputRef.current?.blur();
-        onSearch?.('');
-      }
+    if (apiKey && isApiKeyValid) {
+      setIsExpanded(false);
     }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onSearch]);
+  }, [apiKey, isApiKeyValid]);
 
-  const handleClear = () => {
-    onSearch?.('');
-    searchInputRef.current?.focus();
+  const handleKeySubmit = () => {
+    onApiKeyChange(localKey);
+    if (localKey) {
+      setIsExpanded(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleKeySubmit();
+    }
   };
 
   return (
@@ -40,77 +38,83 @@ export function Navbar({ onSearch, searchQuery = '', hasResults = false }: Navba
       transition={{ duration: 0.3 }}
       className="fixed top-0 left-0 right-0 z-50 bg-dark-bg border-b border-dark-border"
     >
-      <div className="flex items-center justify-between h-16 px-6">
+      <div className="flex items-center justify-between h-14 px-4">
         {/* Left - Logo */}
-        <div className="flex items-center gap-3">
-          <span className="text-xl font-bold text-white tracking-tight">
-            SOLANA<span className="text-accent-muted">NFT</span>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent-purple to-accent-blue flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+          </div>
+          <span className="text-lg font-bold text-white tracking-tight">
+            CainWorld
           </span>
         </div>
 
-        {/* Center - Search */}
-        <div className="flex-1 max-w-xl mx-8">
-          <div className="relative group">
-            <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-gray-400 transition-colors"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={searchQuery}
-              placeholder={hasResults ? "Search NFTs by name, trait, or address..." : "Load a collection to search..."}
-              onChange={(e) => onSearch?.(e.target.value)}
-              disabled={!hasResults}
-              className="w-full bg-dark-surface border border-dark-border rounded-lg pl-10 pr-20 py-2.5 text-sm text-gray-300 placeholder-gray-500 focus:border-gray-600 focus:ring-1 focus:ring-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              {searchQuery ? (
+        {/* Right - API Key */}
+        <div className="flex items-center">
+          <AnimatePresence mode="wait">
+            {isExpanded ? (
+              <motion.div
+                key="expanded"
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 'auto' }}
+                exit={{ opacity: 0, width: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center gap-2"
+              >
+                <div className="relative">
+                  <svg
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  </svg>
+                  <input
+                    type="password"
+                    value={localKey}
+                    onChange={(e) => setLocalKey(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onBlur={handleKeySubmit}
+                    placeholder="Enter API Key"
+                    className="w-48 bg-dark-surface border border-dark-border rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-gray-500 focus:border-accent-purple focus:ring-1 focus:ring-accent-purple transition-colors"
+                    autoFocus
+                  />
+                </div>
                 <button
-                  onClick={handleClear}
-                  className="p-1 text-gray-500 hover:text-gray-300 transition-colors"
+                  onClick={handleKeySubmit}
+                  className="p-1.5 bg-accent-purple hover:bg-accent-purple/80 rounded-lg transition-colors"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </button>
-              ) : (
-                <div className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-gray-500 bg-dark-card rounded border border-dark-border">
-                    Ctrl
-                  </kbd>
-                  <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-gray-500 bg-dark-card rounded border border-dark-border">
-                    K
-                  </kbd>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Right - Controls */}
-        <div className="flex items-center gap-4">
-          {/* Connection Status */}
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-dark-surface rounded-lg border border-dark-border">
-            <div className={`w-2 h-2 rounded-full ${publicKey ? 'bg-accent-green' : 'bg-gray-500'}`}></div>
-            <span className="text-xs font-medium text-gray-400">
-              {publicKey ? 'Connected' : 'Not Connected'}
-            </span>
-          </div>
-
-          {/* Wallet Button */}
-          <WalletButton />
-
-          {/* Profile Avatar */}
-          <div className="w-9 h-9 rounded-full bg-dark-card border border-dark-border flex items-center justify-center">
-            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-          </div>
+              </motion.div>
+            ) : (
+              <motion.button
+                key="collapsed"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setIsExpanded(true)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-colors ${
+                  apiKey && isApiKeyValid
+                    ? 'bg-accent-green/10 border-accent-green/30 text-accent-green'
+                    : 'bg-dark-surface border-dark-border text-gray-400 hover:border-gray-600'
+                }`}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+                <span className="text-xs font-medium">
+                  {apiKey && isApiKeyValid ? 'API ✓' : 'API Key'}
+                </span>
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </motion.header>

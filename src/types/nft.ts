@@ -8,6 +8,8 @@ export interface NFTData {
   name: string;
   image: string;
   attributes: NFTAttribute[];
+  owner?: string;
+  uri?: string;
 }
 
 export type TraitIndex = Record<string, Record<string, number>>;

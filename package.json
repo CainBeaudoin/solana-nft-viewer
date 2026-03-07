@@ -10,6 +10,9 @@
   },
   "dependencies": {
     "@metaplex-foundation/js": "^0.20.1",
+    "@metaplex-foundation/mpl-core": "^1.7.0",
+    "@metaplex-foundation/umi": "^1.5.1",
+    "@metaplex-foundation/umi-bundle-defaults": "^1.5.1",
     "@solana/wallet-adapter-base": "^0.9.27",
     "@solana/wallet-adapter-react": "^0.15.39",
     "@solana/wallet-adapter-react-ui": "^0.9.39",
@@ -29,13 +32,18 @@
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",
     "crypto-browserify": "^3.12.1",
+    "events": "^3.3.0",
     "https-browserify": "^1.0.0",
     "postcss": "^8.4.35",
+    "process": "^0.11.10",
+    "readable-stream": "^4.7.0",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",
     "url": "^0.11.4",
-    "vite": "^5.1.0"
+    "util": "^0.12.5",
+    "vite": "^5.1.0",
+    "vite-plugin-node-polyfills": "^0.25.0"
   }
 }

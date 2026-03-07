@@ -6,9 +6,10 @@ import { calculateRarityScore } from '../utils/metaplex';
 interface NFTGridProps {
   nfts: NFTData[];
   traitIndex: TraitIndex;
+  onAttributeClick?: (traitType: string, value: string) => void;
 }
 
-export function NFTGrid({ nfts, traitIndex }: NFTGridProps) {
+export function NFTGrid({ nfts, traitIndex, onAttributeClick }: NFTGridProps) {
   if (nfts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -38,6 +39,7 @@ export function NFTGrid({ nfts, traitIndex }: NFTGridProps) {
           <NFTCard
             nft={nft}
             rarityScore={calculateRarityScore(nft, traitIndex, nfts.length)}
+            onAttributeClick={onAttributeClick}
           />
         </motion.div>
       ))}
