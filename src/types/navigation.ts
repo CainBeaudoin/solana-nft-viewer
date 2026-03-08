@@ -1,1 +1,1 @@
-export type ViewType = 'collection' | 'rarity';
+export type ViewType = 'collection' | 'rarity' | 'scan';

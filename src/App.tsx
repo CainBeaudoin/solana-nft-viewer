@@ -7,6 +7,7 @@ import { TraitFilter } from './components/TraitFilter';
 import { NFTGrid } from './components/NFTGrid';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { RarityView } from './components/views/RarityView';
+import { ScanView } from './components/views/ScanView';
 import { SelectedTrait, SortOption } from './types/nft';
 import { ViewType } from './types/navigation';
 import { calculateRarityScore } from './utils/metaplex';
@@ -346,6 +347,8 @@ function App() {
         return renderCollectionView();
       case 'rarity':
         return <RarityView nfts={nfts} traitIndex={traitIndex} />;
+      case 'scan':
+        return <ScanView />;
       default:
         return renderCollectionView();
     }
