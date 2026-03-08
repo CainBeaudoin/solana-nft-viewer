@@ -11,9 +11,6 @@ import { SelectedTrait, SortOption } from './types/nft';
 import { ViewType } from './types/navigation';
 import { calculateRarityScore } from './utils/metaplex';
 
-// Test collection for Metaplex Core
-const TEST_COLLECTION = 'DpTgt66W6ic88svYS8byxoEZxr39ppDqrH4NcWvivCdY';
-
 function App() {
   const { nfts, traitIndex, collectionInfo, loading, error, progress, fetchCollection } = useCollection();
   const [selectedTraits, setSelectedTraits] = useState<SelectedTrait[]>([]);
@@ -23,7 +20,6 @@ function App() {
   // Form state
   const [apiKey, setApiKey] = useState('');
   const [collectionAddress, setCollectionAddress] = useState('');
-  const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
 
   // API key is considered valid if it's not empty and we haven't had an API key error
   const isApiKeyValid = apiKey.length > 0 && (!error || !error.toLowerCase().includes('api key'));
@@ -47,13 +43,16 @@ function App() {
   };
 
   const handleFetch = () => {
-    setHasAttemptedFetch(true);
-    fetchCollection(collectionAddress, apiKey, 'mainnet');
-    setActiveView('collection');
+    if (collectionAddress && apiKey) {
+      fetchCollection(collectionAddress, apiKey, 'mainnet');
+      setActiveView('collection');
+    }
   };
 
-  const handleLoadTestCollection = () => {
-    setCollectionAddress(TEST_COLLECTION);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleFetch();
+    }
   };
 
   const filteredAndSortedNfts = useMemo(() => {
@@ -97,123 +96,62 @@ function App() {
 
   const renderCollectionView = () => (
     <>
-      {/* Header Section */}
+      {/* Header with Title */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="mb-6"
+        className="mb-6 text-center"
       >
         <h1 className="text-2xl font-bold text-white">Binder Gallery</h1>
       </motion.div>
 
-      {/* Input Form */}
+      {/* Centered Search Bar */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1 }}
-        className="mb-6 p-5 bg-dark-surface border border-dark-border rounded-xl"
+        className="mb-6 max-w-2xl mx-auto"
       >
-        <div className="space-y-4">
-          {/* Collection Address Input */}
-          <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1.5">
-              Collection Address
-            </label>
-            <input
-              type="text"
-              value={collectionAddress}
-              onChange={(e) => setCollectionAddress(e.target.value)}
-              placeholder="Enter Metaplex Core collection address"
-              className="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-500 font-mono focus:border-accent-purple focus:ring-1 focus:ring-accent-purple transition-colors"
-            />
-            <p className="mt-1 text-xs text-gray-600">
-              Test:{' '}
-              <button
-                onClick={handleLoadTestCollection}
-                className="text-accent-purple hover:underline font-mono"
-              >
-                {TEST_COLLECTION.slice(0, 16)}...
-              </button>
-            </p>
-          </div>
-
-          {/* Fetch Button */}
-          <button
-            onClick={handleFetch}
-            disabled={loading || !apiKey || !collectionAddress}
-            className="w-full py-2.5 px-6 bg-accent-purple hover:bg-accent-purple/80 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
+        <div className="relative">
+          <svg
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            {loading ? (
-              <>
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                <span>Fetching...</span>
-              </>
-            ) : (
-              <span>Fetch Collection</span>
-            )}
-          </button>
-
-          {!apiKey && hasAttemptedFetch && (
-            <p className="text-xs text-yellow-500 text-center">
-              Please enter your API key in the top-right corner
-            </p>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            value={collectionAddress}
+            onChange={(e) => setCollectionAddress(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Input Collection CA"
+            className="w-full bg-dark-surface border border-dark-border rounded-xl pl-12 pr-4 py-3.5 text-sm text-white placeholder-gray-500 font-mono focus:border-accent-purple focus:ring-1 focus:ring-accent-purple transition-colors"
+          />
+          {loading && (
+            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+              <svg className="w-5 h-5 animate-spin text-accent-purple" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            </div>
           )}
         </div>
+        {!apiKey && collectionAddress && (
+          <p className="text-xs text-yellow-500 text-center mt-2">
+            Enter your API key in the top-right corner, then press Enter
+          </p>
+        )}
       </motion.div>
-
-      {/* Active Filters Chip Bar */}
-      {selectedTraits.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-5 p-3 bg-dark-surface border border-dark-border rounded-xl"
-        >
-          <div className="flex flex-wrap items-center gap-2">
-            {selectedTraits.map((trait, index) => (
-              <motion.button
-                key={`${trait.traitType}-${trait.value}`}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ delay: index * 0.02 }}
-                onClick={() => handleTraitToggle(trait.traitType, trait.value)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-dark-card hover:bg-dark-hover border border-dark-border rounded-full text-sm transition-colors group"
-              >
-                <span className="text-gray-400">{trait.traitType}:</span>
-                <span className="text-white font-medium">{trait.value}</span>
-                <svg
-                  className="w-3.5 h-3.5 text-gray-500 group-hover:text-red-400 transition-colors ml-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </motion.button>
-            ))}
-            <button
-              onClick={handleClearFilters}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-dark-hover rounded-full transition-colors"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              Clear all
-            </button>
-          </div>
-        </motion.div>
-      )}
 
       {/* Error State */}
       {error && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-5 p-3 bg-red-500/10 border border-red-500/20 rounded-lg"
+          className="mb-5 p-3 bg-red-500/10 border border-red-500/20 rounded-lg max-w-2xl mx-auto"
         >
           <div className="flex items-center gap-2">
             <svg className="w-4 h-4 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -234,7 +172,6 @@ function App() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-5 p-4 bg-dark-surface border border-dark-border rounded-xl"
         >
-          <h2 className="text-sm font-semibold text-white mb-3">Collection Info</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div>
               <p className="text-xs text-gray-500 mb-0.5">Name</p>
@@ -258,9 +195,10 @@ function App() {
         </motion.div>
       )}
 
-      {/* NFT Display */}
+      {/* NFT Display - Two Column Layout */}
       {!loading && nfts.length > 0 && (
         <div className="flex flex-col lg:flex-row gap-5">
+          {/* Left Column - Filters */}
           <TraitFilter
             traitIndex={traitIndex}
             selectedTraits={selectedTraits}
@@ -271,7 +209,52 @@ function App() {
             totalCount={nfts.length}
             filteredCount={filteredAndSortedNfts.length}
           />
+
+          {/* Right Column - Selected Chips + NFT Grid */}
           <div className="flex-1 min-w-0">
+            {/* Selected Attribute Chips - Above Grid */}
+            {selectedTraits.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4 p-3 bg-dark-surface border border-dark-border rounded-xl"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  {selectedTraits.map((trait, index) => (
+                    <motion.button
+                      key={`${trait.traitType}-${trait.value}`}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ delay: index * 0.02 }}
+                      onClick={() => handleTraitToggle(trait.traitType, trait.value)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-dark-card hover:bg-dark-hover border border-dark-border rounded-full text-sm transition-colors group"
+                    >
+                      <span className="text-gray-400">{trait.traitType}:</span>
+                      <span className="text-white font-medium">{trait.value}</span>
+                      <svg
+                        className="w-3.5 h-3.5 text-gray-500 group-hover:text-red-400 transition-colors ml-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </motion.button>
+                  ))}
+                  <button
+                    onClick={handleClearFilters}
+                    className="flex items-center gap-1 px-3 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-dark-hover rounded-full transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Clear all
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
             {/* Stats Bar */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -289,6 +272,7 @@ function App() {
               </div>
             </motion.div>
 
+            {/* NFT Grid */}
             <NFTGrid
               nfts={filteredAndSortedNfts}
               traitIndex={traitIndex}
@@ -313,7 +297,7 @@ function App() {
           </div>
           <h3 className="text-base font-semibold text-white mb-1">Ready to Load</h3>
           <p className="text-gray-500 text-sm text-center max-w-sm">
-            Enter your API key and collection address to get started.
+            Enter your API key and collection address, then press Enter.
           </p>
         </motion.div>
       )}
