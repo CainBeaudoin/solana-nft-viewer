@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BinderChart } from '../BinderChart';
 
 interface TokenData {
   name: string;
@@ -308,6 +307,7 @@ export function ScanView() {
   const token = binderToken;
   const [activeTab, setActiveTab] = useState<TabType>('binder');
   const [selectedCollection, setSelectedCollection] = useState<BoundCollection | null>(null);
+  const [showMarkers, setShowMarkers] = useState(true);
 
   // Calculate accurate totals based on currentSize (active supply after burns)
   const collectionStats = useMemo(() => {
@@ -332,6 +332,28 @@ export function ScanView() {
     stats.sort((a, b) => b.boundSupply - a.boundSupply);
 
     return { collections: stats, totalBound, totalBurned, totalMinted, totalActive };
+  }, []);
+
+  // Calculate marker positions based on timestamps
+  const chartMarkers = useMemo(() => {
+    const sortedCollections = [...boundCollections].sort((a, b) => a.createdAt - b.createdAt);
+    const minTime = Math.min(...sortedCollections.map(c => c.createdAt));
+    const maxTime = Math.max(...sortedCollections.map(c => c.createdAt));
+    const timeRange = maxTime - minTime || 1;
+
+    return sortedCollections.map((c, index) => {
+      const timePosition = (c.createdAt - minTime) / timeRange;
+      const leftPercent = 8 + (timePosition * 77);
+      const row = index % 3;
+      const topOffset = 80 + (row * 28);
+
+      return {
+        ...c,
+        leftPercent: Math.min(Math.max(leftPercent, 8), 85),
+        topOffset,
+        boundSupply: c.currentSize * c.binderPerNft
+      };
+    });
   }, []);
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
@@ -605,13 +627,89 @@ export function ScanView() {
           transition={{ duration: 0.3 }}
           className="flex-1 bg-dark-surface border border-dark-border rounded-2xl overflow-hidden"
         >
-          {/* TradingView Chart with Collection Markers */}
-          <div style={{ height: '460px' }}>
-            <BinderChart
-              pairAddress={token.pairAddress}
-              collections={boundCollections}
-              onMarkerClick={setSelectedCollection}
+          {/* Chart Header */}
+          <div className="flex items-center justify-between px-4 py-2 border-b border-dark-border">
+            <span className="text-sm font-medium text-white">$BINDER Chart</span>
+            <button
+              onClick={() => setShowMarkers(!showMarkers)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                showMarkers
+                  ? 'bg-accent-purple/20 text-accent-purple border border-accent-purple/50'
+                  : 'bg-dark-card text-gray-400 hover:text-white border border-dark-border'
+              }`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              Collection Events
+            </button>
+          </div>
+
+          {/* Chart Container with Markers */}
+          <div className="relative" style={{ height: '460px' }}>
+            <iframe
+              src={`https://dexscreener.com/solana/${token.pairAddress}?embed=1&theme=dark&trades=0&info=0`}
+              className="w-full h-full"
+              style={{ border: 'none' }}
+              title="Token Chart"
             />
+
+            {/* Overlay to hide DexScreener branding */}
+            <div className="absolute bottom-0 left-0 right-0 h-8 bg-dark-surface" />
+            <div className="absolute top-0 right-0 w-32 h-10 bg-dark-surface" />
+
+            {/* Collection Creation Markers */}
+            {showMarkers && (
+              <>
+                {chartMarkers.map((marker, i) => (
+                  <motion.div
+                    key={marker.address}
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.03, type: 'spring', stiffness: 300 }}
+                    className="absolute cursor-pointer group"
+                    style={{
+                      left: `${marker.leftPercent}%`,
+                      top: `${marker.topOffset}px`,
+                      transform: 'translateX(-50%)'
+                    }}
+                    onClick={() => setSelectedCollection(marker)}
+                  >
+                    {/* Marker Icon */}
+                    <div className="relative">
+                      <div className="w-6 h-6 rounded-full bg-accent-purple border-2 border-white shadow-lg flex items-center justify-center hover:scale-125 transition-transform">
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                      </div>
+
+                      {/* Vertical line */}
+                      <div className="absolute top-6 left-1/2 -translate-x-1/2 w-px h-16 bg-gradient-to-b from-accent-purple to-transparent opacity-50" />
+
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-dark-bg border border-dark-border rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 min-w-[180px]">
+                        <div className="flex items-center gap-2 mb-1">
+                          <img
+                            src={marker.image}
+                            alt=""
+                            className="w-5 h-5 rounded"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                          <span className="text-sm font-medium text-white">{marker.name}</span>
+                        </div>
+                        <div className="text-xs text-gray-400">{formatFullDate(marker.createdAt)}</div>
+                        <div className="text-xs text-accent-purple mt-1">
+                          Bound: {formatNumber(marker.boundSupply)}
+                        </div>
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-dark-border" />
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </>
+            )}
           </div>
 
           {/* Quick Stats */}
