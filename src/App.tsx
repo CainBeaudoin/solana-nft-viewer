@@ -16,6 +16,8 @@ function App() {
   const [selectedTraits, setSelectedTraits] = useState<SelectedTrait[]>([]);
   const [sortOption, setSortOption] = useState<SortOption>('rarity-desc');
   const [activeView, setActiveView] = useState<ViewType>('collection');
+  const [galleryMode, setGalleryMode] = useState(false);
+  const [columnsPerRow, setColumnsPerRow] = useState(6);
 
   // Form state
   const [apiKey, setApiKey] = useState('');
@@ -259,16 +261,48 @@ function App() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex items-center gap-4 mb-4"
+              className="flex items-center justify-between mb-4"
             >
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-accent-green"></div>
-                <span className="text-xs text-gray-400">
-                  {filteredAndSortedNfts.length} NFTs
-                </span>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-accent-green"></div>
+                  <span className="text-xs text-gray-400">
+                    {filteredAndSortedNfts.length} NFTs
+                  </span>
+                </div>
+                <div className="text-xs text-gray-600">
+                  {Object.keys(traitIndex).length} traits
+                </div>
               </div>
-              <div className="text-xs text-gray-600">
-                {Object.keys(traitIndex).length} traits
+
+              {/* Gallery Mode Controls */}
+              <div className="flex items-center gap-4">
+                {galleryMode && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">{columnsPerRow}</span>
+                    <input
+                      type="range"
+                      min="3"
+                      max="12"
+                      value={columnsPerRow}
+                      onChange={(e) => setColumnsPerRow(Number(e.target.value))}
+                      className="w-24 h-1 bg-dark-border rounded-lg appearance-none cursor-pointer accent-accent-purple"
+                    />
+                  </div>
+                )}
+                <button
+                  onClick={() => setGalleryMode(!galleryMode)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
+                    galleryMode
+                      ? 'bg-accent-purple/20 border-accent-purple/50 text-accent-purple'
+                      : 'bg-dark-surface border-dark-border text-gray-400 hover:border-gray-600'
+                  }`}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                  Gallery
+                </button>
               </div>
             </motion.div>
 
@@ -277,6 +311,8 @@ function App() {
               nfts={filteredAndSortedNfts}
               traitIndex={traitIndex}
               onAttributeClick={handleTraitToggle}
+              galleryMode={galleryMode}
+              columnsPerRow={columnsPerRow}
             />
           </div>
         </div>

@@ -7,9 +7,17 @@ interface NFTGridProps {
   nfts: NFTData[];
   traitIndex: TraitIndex;
   onAttributeClick?: (traitType: string, value: string) => void;
+  galleryMode?: boolean;
+  columnsPerRow?: number;
 }
 
-export function NFTGrid({ nfts, traitIndex, onAttributeClick }: NFTGridProps) {
+export function NFTGrid({
+  nfts,
+  traitIndex,
+  onAttributeClick,
+  galleryMode = false,
+  columnsPerRow = 6
+}: NFTGridProps) {
   if (nfts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -22,12 +30,26 @@ export function NFTGrid({ nfts, traitIndex, onAttributeClick }: NFTGridProps) {
     );
   }
 
+  // Dynamic grid columns based on columnsPerRow when in gallery mode
+  const gridStyle = galleryMode
+    ? {
+        display: 'grid',
+        gridTemplateColumns: `repeat(${columnsPerRow}, minmax(0, 1fr))`,
+        gap: '0.5rem'
+      }
+    : undefined;
+
+  const gridClass = galleryMode
+    ? ''
+    : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4';
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4"
+      className={gridClass}
+      style={gridStyle}
     >
       {nfts.map((nft, index) => (
         <motion.div
@@ -40,6 +62,9 @@ export function NFTGrid({ nfts, traitIndex, onAttributeClick }: NFTGridProps) {
             nft={nft}
             rarityScore={calculateRarityScore(nft, traitIndex, nfts.length)}
             onAttributeClick={onAttributeClick}
+            galleryMode={galleryMode}
+            allNfts={nfts}
+            currentIndex={index}
           />
         </motion.div>
       ))}
